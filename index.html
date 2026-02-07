@@ -1,36 +1,2044 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pythagora Quest</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: #030712;
-            color: #f8fafc;
-            overflow-x: hidden;
-        }
-        .fira-code {
-            font-family: 'Fira Code', monospace;
-        }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Assessment Lab — Formation IA & Évaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-surface: #12121a;
+  --bg-card: rgba(255,255,255,0.03);
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.08);
+  --text-primary: #e8e6f0;
+  --text-secondary: #8a879a;
+  --text-muted: #5a576a;
+  --cyan: #00e5ff;
+  --cyan-glow: rgba(0,229,255,0.15);
+  --magenta: #ff2d7b;
+  --magenta-glow: rgba(255,45,123,0.15);
+  --amber: #ffb300;
+  --amber-glow: rgba(255,179,0,0.15);
+  --green: #00e676;
+  --green-glow: rgba(0,230,118,0.15);
+  --purple: #b388ff;
+  --purple-glow: rgba(179,136,255,0.15);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
 }
-</script>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ═══ ANIMATED BACKGROUND ═══ */
+.bg-mesh {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-mesh::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 30%, rgba(0,229,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 500px at 80% 20%, rgba(255,45,123,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 600px at 60% 80%, rgba(179,136,255,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 300px 300px at 30% 70%, rgba(255,179,0,0.04) 0%, transparent 70%);
+  animation: meshFloat 25s ease-in-out infinite;
+}
+
+@keyframes meshFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2%, -3%) rotate(1deg); }
+  50% { transform: translate(-1%, 2%) rotate(-0.5deg); }
+  75% { transform: translate(3%, 1%) rotate(0.5deg); }
+}
+
+/* ═══ GRID OVERLAY ═══ */
+.grid-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent);
+}
+
+/* ═══ FLOATING PARTICLES ═══ */
+.particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--cyan);
+  opacity: 0;
+  animation: particleFloat 8s ease-in-out infinite;
+}
+
+.particle:nth-child(2n) { background: var(--magenta); animation-duration: 10s; }
+.particle:nth-child(3n) { background: var(--amber); animation-duration: 12s; }
+.particle:nth-child(4n) { background: var(--purple); animation-duration: 9s; }
+
+@keyframes particleFloat {
+  0% { opacity: 0; transform: translateY(100vh) scale(0); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+}
+
+/* ═══ MAIN LAYOUT ═══ */
+.main-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ═══ HEADER / HERO ═══ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 60px 20px;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 100px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-bottom: 32px;
+  animation: fadeSlideUp 0.8s ease-out 0.2s both;
+}
+
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--cyan-glow); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 8px transparent; }
+}
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  animation: fadeSlideUp 0.8s ease-out 0.4s both;
+}
+
+.hero h1 .line1 {
+  display: block;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero h1 .line2 {
+  display: block;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 50%, var(--magenta) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 20px auto 40px;
+  animation: fadeSlideUp 0.8s ease-out 0.6s both;
+  font-weight: 300;
+}
+
+.hero-subtitle strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ PROGRESS BAR ═══ */
+.progress-section {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 12px 0;
+  transition: all 0.3s ease;
+}
+
+.progress-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--cyan);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-logo svg {
+  width: 20px; height: 20px;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 4px;
+  background: var(--glass);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--cyan), var(--purple), var(--magenta));
+  border-radius: 100px;
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+.progress-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 65px;
+  text-align: right;
+}
+
+.progress-counter .done {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+/* ═══ STATS CARDS ═══ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: -40px auto 60px;
+  max-width: 700px;
+  animation: fadeSlideUp 0.8s ease-out 0.8s both;
+}
+
+.stat-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+.stat-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-number.c1 { color: var(--cyan); }
+.stat-number.c2 { color: var(--magenta); }
+.stat-number.c3 { color: var(--amber); }
+.stat-number.c4 { color: var(--green); }
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ═══ INTRO SECTION ═══ */
+.intro-section {
+  max-width: 800px;
+  margin: 0 auto 80px;
+  text-align: center;
+}
+
+.intro-section h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.intro-section p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.intro-tips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.tip-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.tip-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+}
+
+.tip-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.tip-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.tip-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ═══ CATEGORY SECTIONS ═══ */
+.category-section {
+  margin-bottom: 80px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.category-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.cat-diag .category-icon { background: var(--cyan-glow); border: 1px solid rgba(0,229,255,0.2); }
+.cat-form .category-icon { background: var(--amber-glow); border: 1px solid rgba(255,179,0,0.2); }
+.cat-cert .category-icon { background: var(--magenta-glow); border: 1px solid rgba(255,45,123,0.2); }
+.cat-plus .category-icon { background: var(--purple-glow); border: 1px solid rgba(179,136,255,0.2); }
+.cat-meta .category-icon { background: var(--green-glow); border: 1px solid rgba(0,230,118,0.2); }
+
+.category-info h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.cat-diag .category-info h2 { color: var(--cyan); }
+.cat-form .category-info h2 { color: var(--amber); }
+.cat-cert .category-info h2 { color: var(--magenta); }
+.cat-plus .category-info h2 { color: var(--purple); }
+.cat-meta .category-info h2 { color: var(--green); }
+
+.category-info p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.category-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--glass);
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+}
+
+/* ═══ EXERCISE CARDS ═══ */
+.exercises-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.exercise-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.35s ease;
+  position: relative;
+}
+
+.exercise-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.02));
+  pointer-events: none;
+}
+
+.exercise-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.exercise-card.completed {
+  border-color: rgba(0,230,118,0.2);
+}
+
+.exercise-card.completed::after {
+  content: '✓';
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 28px; height: 28px;
+  background: var(--green);
+  color: var(--bg-deep);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  z-index: 2;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0) rotate(-180deg); }
+  to { transform: scale(1) rotate(0deg); }
+}
+
+.exercise-header {
+  padding: 20px 24px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.exercise-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.cat-diag .exercise-number { background: var(--cyan-glow); color: var(--cyan); border: 1px solid rgba(0,229,255,0.15); }
+.cat-form .exercise-number { background: var(--amber-glow); color: var(--amber); border: 1px solid rgba(255,179,0,0.15); }
+.cat-cert .exercise-number { background: var(--magenta-glow); color: var(--magenta); border: 1px solid rgba(255,45,123,0.15); }
+.cat-plus .exercise-number { background: var(--purple-glow); color: var(--purple); border: 1px solid rgba(179,136,255,0.15); }
+.cat-meta .exercise-number { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,230,118,0.15); }
+
+.exercise-title-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.exercise-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.exercise-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.exercise-meta .tag {
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+}
+
+.exercise-toggle {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.exercise-toggle:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+}
+
+.exercise-card.open .exercise-toggle {
+  transform: rotate(180deg);
+}
+
+.exercise-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.exercise-card.open .exercise-body {
+  max-height: 2000px;
+}
+
+.exercise-content {
+  padding: 0 24px 24px;
+}
+
+.exercise-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--glass);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--glass-border);
+}
+
+.cat-diag .exercise-description { border-left-color: rgba(0,229,255,0.3); }
+.cat-form .exercise-description { border-left-color: rgba(255,179,0,0.3); }
+.cat-cert .exercise-description { border-left-color: rgba(255,45,123,0.3); }
+.cat-plus .exercise-description { border-left-color: rgba(179,136,255,0.3); }
+.cat-meta .exercise-description { border-left-color: rgba(0,230,118,0.3); }
+
+.prompt-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prompt-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  position: relative;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 12px;
+}
+
+.prompt-box .placeholder {
+  color: var(--amber);
+  font-style: italic;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 500;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+.btn-copy { }
+.btn-copy.copied {
+  background: var(--green-glow);
+  border-color: rgba(0,230,118,0.3);
+  color: var(--green);
+}
+
+.btn-gemini {
+  background: linear-gradient(135deg, rgba(66,133,244,0.15), rgba(219,68,55,0.15));
+  border-color: rgba(66,133,244,0.2);
+}
+
+.btn-gemini:hover {
+  background: linear-gradient(135deg, rgba(66,133,244,0.25), rgba(219,68,55,0.25));
+}
+
+.btn-done {
+  background: var(--green-glow);
+  border-color: rgba(0,230,118,0.2);
+  color: var(--green);
+}
+
+.btn-done:hover {
+  background: rgba(0,230,118,0.2);
+  border-color: rgba(0,230,118,0.4);
+}
+
+.exercise-tip {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255,179,0,0.05);
+  border: 1px solid rgba(255,179,0,0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.exercise-tip .tip-emoji {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+/* ═══ SCROLL REVEAL ═══ */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══ FOOTER ═══ */
+.footer {
+  text-align: center;
+  padding: 60px 20px 40px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 80px;
+}
+
+.footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.footer p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.footer .hearts {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ═══ CONFETTI ═══ */
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  top: -20px;
+  animation: confettiFall 3s ease-in forwards;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotateZ(0deg) rotateX(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotateZ(720deg) rotateX(360deg); opacity: 0; }
+}
+
+/* ═══ COMPLETION BANNER ═══ */
+.completion-banner {
+  display: none;
+  text-align: center;
+  padding: 40px;
+  margin: 40px 0;
+  background: linear-gradient(135deg, var(--green-glow), var(--cyan-glow));
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: var(--radius);
+  animation: fadeSlideUp 0.6s ease-out;
+}
+
+.completion-banner.show { display: block; }
+
+.completion-banner h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.completion-banner p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* ═══ SCROLL TOP ═══ */
+.scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+}
+
+.scroll-top.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-top:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ═══ NAV FILTER ═══ */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 50px;
+}
+
+.filter-btn {
+  padding: 8px 18px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 500;
+}
+
+.filter-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+}
+
+.filter-btn.active {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: var(--text-primary);
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 2.2rem; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .exercise-header { padding: 16px; }
+  .exercise-content { padding: 0 16px 16px; }
+  .prompt-box { font-size: 0.75rem; padding: 12px 14px; }
+  .category-header { flex-wrap: wrap; }
+  .category-count { margin-left: 0; }
+}
+</style>
 </head>
 <body>
-    <div id="root"></div>
+
+<!-- ═══ BACKGROUND ═══ -->
+<div class="bg-mesh"></div>
+<div class="grid-overlay"></div>
+<div class="particles" id="particles"></div>
+
+<!-- ═══ PROGRESS BAR ═══ -->
+<div class="progress-section" id="progressSection" style="opacity:0; pointer-events:none;">
+  <div class="progress-inner">
+    <div class="progress-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      AI Lab
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-counter">
+      <span class="done" id="progressCount">0</span> / <span id="progressTotal">17</span>
+    </div>
+  </div>
+</div>
+
+<div class="main-container">
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero" id="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Formation en cours — Institut Saint-Luc Frameries
+    </div>
+    <h1>
+      <span class="line1">AI Assessment</span>
+      <span class="line2">Lab</span>
+    </h1>
+    <p class="hero-subtitle">
+      Découvrez comment <strong>l'intelligence artificielle</strong> peut transformer votre façon d'évaluer. 17 exercices pratiques avec <strong>Gemini</strong> pour maîtriser l'évaluation diagnostique, formative et certificative.
+    </p>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number c1">17</div>
+        <div class="stat-label">Exercices</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number c2">5</div>
+        <div class="stat-label">Catégories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number c3">~90</div>
+        <div class="stat-label">Minutes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number c4" id="xpDisplay">0</div>
+        <div class="stat-label">XP gagnés</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ INTRO ═══ -->
+  <section class="intro-section reveal">
+    <h2>🎯 Avant de commencer</h2>
+    <p>Chaque exercice contient un <strong>prompt prêt à copier</strong> dans Gemini. Vous pouvez l'adapter à votre matière. Complétez les <span style="color: var(--amber);">[parties en jaune]</span> avec vos propres informations.</p>
+    <div class="intro-tips">
+      <div class="tip-card">
+        <div class="tip-icon">📋</div>
+        <div class="tip-title">Copiez le prompt</div>
+        <div class="tip-desc">Cliquez sur « Copier » puis collez directement dans Gemini</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">✏️</div>
+        <div class="tip-title">Personnalisez</div>
+        <div class="tip-desc">Remplacez les zones en jaune par votre matière et niveau</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🔄</div>
+        <div class="tip-title">Itérez</div>
+        <div class="tip-desc">Demandez à Gemini de modifier, améliorer ou adapter le résultat</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">✅</div>
+        <div class="tip-title">Validez</div>
+        <div class="tip-desc">Cochez chaque exercice terminé pour suivre votre progression</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FILTER BAR ═══ -->
+  <div class="filter-bar reveal">
+    <button class="filter-btn active" data-filter="all">Tous</button>
+    <button class="filter-btn" data-filter="diag">🔍 Diagnostique</button>
+    <button class="filter-btn" data-filter="form">🔄 Formative</button>
+    <button class="filter-btn" data-filter="cert">🏆 Certificative</button>
+    <button class="filter-btn" data-filter="plus">⚡ Outils +</button>
+    <button class="filter-btn" data-filter="meta">🧠 Méta-compétences</button>
+  </div>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ CATÉGORIE 1 : DIAGNOSTIQUE ═══ -->
+  <!-- ════════════════════════════════════════ -->
+  <section class="category-section cat-diag reveal" data-category="diag">
+    <div class="category-header">
+      <div class="category-icon">🔍</div>
+      <div class="category-info">
+        <h2>Évaluation Diagnostique</h2>
+        <p>Identifier les prérequis et connaissances initiales des élèves</p>
+      </div>
+      <span class="category-count">4 exercices</span>
+    </div>
+    <div class="exercises-grid">
+
+      <!-- EX 1 -->
+      <div class="exercise-card" data-ex="1">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 01</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Générer un QCM diagnostique intelligent</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Créez un QCM de 5 questions pour évaluer les connaissances préalables de vos élèves avant d'aborder un nouveau chapitre. L'IA va proposer des distracteurs crédibles basés sur les erreurs fréquentes.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Tu es un expert en pédagogie. Crée un QCM diagnostique de 5 questions pour des élèves de <span class="placeholder">[niveau, ex: 4e secondaire technique]</span> en <span class="placeholder">[matière, ex: comptabilité]</span> sur le thème <span class="placeholder">[thème, ex: les principes de base de la TVA]</span>.
+
+Pour chaque question :
+- Propose 4 choix (A, B, C, D) avec un seul correct
+- Les distracteurs doivent refléter des erreurs courantes d'élèves
+- Indique la bonne réponse et une brève explication
+- Précise quel prérequis la question évalue
+
+Présente le résultat dans un format clair avec un tableau récapitulatif à la fin.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Astuce : après avoir reçu le QCM, demandez à Gemini « Transforme ce QCM en format que je peux imprimer avec un en-tête pour le nom de l'élève ».</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 2 -->
+      <div class="exercise-card" data-ex="2">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 02</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer un test Vrai/Faux avec justification</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Un Vrai/Faux classique ne révèle pas grand-chose. En ajoutant la justification, vous identifiez les raisonnements erronés. Demandons à l'IA de créer cet outil diagnostique.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée un exercice de 8 affirmations Vrai/Faux pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> sur le thème <span class="placeholder">[thème]</span>.
+
+Consignes :
+- Chaque affirmation doit être courte (1-2 phrases max)
+- Mélange des affirmations vraies et fausses (pas 50/50 exact)
+- Certaines affirmations doivent être « presque vraies » pour pousser à la réflexion
+- Pour chaque affirmation, inclus un espace « Justifie ta réponse : _____ »
+- Fournis le corrigé avec les justifications attendues
+
+Format : prêt à imprimer, avec consignes pour l'élève en haut.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Les affirmations « presque vraies » sont les plus diagnostiques : elles révèlent les conceptions erronées !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 3 -->
+      <div class="exercise-card" data-ex="3">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 03</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Concevoir une carte mentale diagnostique</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Demandez à l'IA de créer une carte mentale avec des « trous » que les élèves doivent compléter. Cela vous révèle visuellement ce qu'ils savent déjà et ce qui leur manque.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée une carte mentale textuelle sur le thème <span class="placeholder">[thème]</span> pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span>.
+
+La carte doit :
+- Avoir un concept central et 4-5 branches principales
+- Chaque branche a 2-3 sous-éléments
+- Remplace environ 40% des éléments par des « _____ » (trous à compléter)
+- Les trous doivent cibler les concepts clés et prérequis
+- Utilise des tirets et indentations pour représenter la hiérarchie
+
+Fournis aussi la version complète (corrigé) séparément.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Demandez ensuite à Gemini : « Quels sont les prérequis que cette carte mentale permet de vérifier ? »</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 4 -->
+      <div class="exercise-card" data-ex="4">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 04</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Analyser les erreurs types d'un sujet</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Avant même de faire passer un test, demandez à l'IA de lister les erreurs et confusions typiques des élèves sur votre sujet. Cela vous aide à cibler votre évaluation diagnostique.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Tu es un enseignant expérimenté en <span class="placeholder">[matière]</span>. Liste les 8 erreurs et confusions les plus fréquentes que font les élèves de <span class="placeholder">[niveau]</span> quand ils abordent le sujet <span class="placeholder">[thème]</span>.
+
+Pour chaque erreur :
+1. Décris l'erreur ou la confusion
+2. Explique pourquoi les élèves font cette erreur
+3. Propose une question simple qui permet de détecter cette erreur
+4. Suggère une piste de remédiation courte
+
+Présente cela de manière structurée et concise.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Cet exercice est précieux pour préparer vos évaluations : les erreurs listées par l'IA deviennent vos distracteurs de QCM !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ CATÉGORIE 2 : FORMATIVE ═══ -->
+  <!-- ════════════════════════════════════════ -->
+  <section class="category-section cat-form reveal" data-category="form">
+    <div class="category-header">
+      <div class="category-icon">🔄</div>
+      <div class="category-info">
+        <h2>Évaluation Formative</h2>
+        <p>Accompagner l'apprentissage et fournir du feedback constructif</p>
+      </div>
+      <span class="category-count">5 exercices</span>
+    </div>
+    <div class="exercises-grid">
+
+      <!-- EX 5 -->
+      <div class="exercise-card" data-ex="5">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 05</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Générer un feedback personnalisé</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              L'un des plus gros atouts de l'IA : rédiger des feedbacks individualisés à partir d'une réponse d'élève. Simulez ici avec une réponse fictive que vous inventez.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Tu es un enseignant bienveillant mais exigeant en <span class="placeholder">[matière]</span>.
+
+Voici la question posée à l'élève :
+« <span class="placeholder">[écris ici une question de ton cours]</span> »
+
+Voici la réponse de l'élève :
+« <span class="placeholder">[écris ici une réponse fictive d'élève, avec quelques erreurs]</span> »
+
+Rédige un feedback formatif qui :
+1. Commence par un point positif (ce qui est correct)
+2. Identifie 2-3 erreurs ou imprécisions
+3. Pour chaque erreur, explique POURQUOI c'est incorrect
+4. Donne des pistes concrètes pour s'améliorer
+5. Termine par un encouragement sincère
+
+Ton : bienveillant, constructif, adapté à un élève de <span class="placeholder">[niveau]</span>.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Imaginez : avec l'IA, vous pourriez générer un feedback personnalisé pour chaque élève en quelques minutes au lieu de quelques heures !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 6 -->
+      <div class="exercise-card" data-ex="6">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 06</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer un exercice d'appariement (matching)</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Les exercices d'appariement sont parfaits en formatif : rapides à réaliser, ils vérifient la compréhension des liens entre concepts. Idéal pour un exercice de révision.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée un exercice d'appariement (matching) pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> sur <span class="placeholder">[thème]</span>.
+
+Consignes :
+- Colonne A : 8 termes ou concepts
+- Colonne B : 8 définitions ou descriptions (dans un ordre différent)
+- Ajoute 2 définitions supplémentaires en colonne B (intrus) pour augmenter la difficulté
+- Les descriptions doivent être reformulées (pas la définition mot pour mot du cours)
+- Fournis le corrigé à la fin
+
+Format : tableau à 2 colonnes prêt à imprimer.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Demandez ensuite : « Transforme cet exercice en version plus facile pour les élèves en difficulté (avec des indices) ».</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 7 -->
+      <div class="exercise-card" data-ex="7">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 07</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer un texte à trous progressif</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Demandez à l'IA de créer un texte à trous en 2 versions : une version guidée (avec banque de mots) et une version libre (sans aide). Parfait pour différencier !
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée un texte à trous sur <span class="placeholder">[thème]</span> pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span>.
+
+Le texte doit :
+- Faire environ 10-15 lignes
+- Contenir 10 trous numérotés (1), (2), etc.
+- Être un texte cohérent et pédagogique (pas juste des phrases isolées)
+
+Fournis 3 versions :
+1. VERSION GUIDÉE : le texte à trous + une banque de mots (avec 3 intrus)
+2. VERSION LIBRE : le même texte à trous SANS banque de mots
+3. CORRIGÉ : le texte complet avec les réponses en gras</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>La version guidée est parfaite en formatif (aide à apprendre), la version libre peut servir en certificatif !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 8 -->
+      <div class="exercise-card" data-ex="8">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 08</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer un exercice « Trouve l'erreur »</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Exercice très formateur : l'élève doit repérer et corriger les erreurs dans un texte ou un raisonnement. Cela développe l'esprit critique et la maîtrise du sujet.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée un exercice « Trouve et corrige les erreurs » pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> sur <span class="placeholder">[thème]</span>.
+
+Rédige un court texte (8-10 lignes) ou un raisonnement qui contient exactement 6 erreurs :
+- 2 erreurs faciles à repérer
+- 2 erreurs de difficulté moyenne
+- 2 erreurs subtiles
+
+Le texte doit sembler « presque correct » pour être réaliste.
+
+Consigne pour l'élève : « Ce texte contient 6 erreurs. Retrouve-les, souligne-les et propose la correction. »
+
+Fournis le corrigé avec les erreurs identifiées et expliquées.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Ce type d'exercice est redoutablement efficace : corriger une erreur exige une compréhension plus profonde que de simplement répondre correctement.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 9 -->
+      <div class="exercise-card" data-ex="9">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 09</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Générer une autoévaluation pour élèves</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐ Débutant</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Apprenez à vos élèves à évaluer eux-mêmes leur progression. L'IA peut créer une grille d'autoévaluation claire et adaptée à n'importe quel chapitre.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée une fiche d'autoévaluation pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> après le chapitre sur <span class="placeholder">[thème]</span>.
+
+La fiche doit contenir :
+- Un titre motivant
+- 8-10 compétences/savoirs formulés en « Je suis capable de... »
+- Pour chaque item, 3 niveaux : 😊 Acquis | 🤔 En cours | 😟 Pas encore
+- Une section « Ce que je dois revoir en priorité : _____ »
+- Une section « Ma stratégie pour progresser : _____ »
+
+Ton : encourageant et bienveillant. Format : prêt à imprimer.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>L'autoévaluation développe la métacognition : l'élève apprend à apprendre, ce qui est une compétence clé !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ CATÉGORIE 3 : CERTIFICATIVE ═══ -->
+  <!-- ════════════════════════════════════════ -->
+  <section class="category-section cat-cert reveal" data-category="cert">
+    <div class="category-header">
+      <div class="category-icon">🏆</div>
+      <div class="category-info">
+        <h2>Évaluation Certificative</h2>
+        <p>Concevoir des épreuves rigoureuses et des grilles critériées</p>
+      </div>
+      <span class="category-count">4 exercices</span>
+    </div>
+    <div class="exercises-grid">
+
+      <!-- EX 10 -->
+      <div class="exercise-card" data-ex="10">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 10</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer une grille d'évaluation critériée</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Les grilles critériées (rubrics) garantissent une évaluation transparente et cohérente. L'IA peut en créer une en quelques secondes, que vous pouvez ensuite affiner.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée une grille d'évaluation critériée (rubric) pour évaluer <span class="placeholder">[type de travail, ex: une présentation orale, un rapport écrit, un exercice pratique]</span> en <span class="placeholder">[matière]</span> pour des élèves de <span class="placeholder">[niveau]</span>.
+
+La grille doit contenir :
+- 4-5 critères d'évaluation pertinents
+- 4 niveaux de performance : Excellent (4) / Satisfaisant (3) / En développement (2) / Insuffisant (1)
+- Des descripteurs précis et observables pour chaque case
+- Un total sur 20 avec la pondération de chaque critère
+
+Présente la grille sous forme de tableau clair.
+Ajoute un espace pour les commentaires du professeur.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Partagez la grille avec les élèves AVANT le travail : ils savent exactement ce qu'on attend d'eux. C'est ça, la transparence !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 11 -->
+      <div class="exercise-card" data-ex="11">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 11</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Concevoir une situation-problème évaluative</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Les situations-problèmes évaluent la capacité de l'élève à mobiliser ses savoirs dans un contexte concret et réaliste. L'IA peut vous aider à en créer d'authentiques.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée une situation-problème pour une évaluation certificative en <span class="placeholder">[matière]</span> pour des élèves de <span class="placeholder">[niveau]</span> portant sur <span class="placeholder">[compétences à évaluer]</span>.
+
+La situation-problème doit :
+- Être ancrée dans un contexte réaliste et motivant pour des ados
+- Nécessiter la mobilisation de plusieurs savoirs/compétences
+- Contenir toutes les données nécessaires (pas de recherche externe)
+- Comporter 3-4 questions/tâches de difficulté croissante
+- La dernière question doit exiger une réflexion personnelle
+
+Fournis aussi :
+- Le corrigé détaillé avec barème (total /20)
+- Les critères d'évaluation pour chaque question</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Demandez ensuite à Gemini : « Le contexte est-il suffisamment motivant pour des ados de 16 ans ? Propose une variante plus engageante. »</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 12 -->
+      <div class="exercise-card" data-ex="12">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 12</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer des questions selon la taxonomie de Bloom</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐⭐ Avancé</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              L'IA peut créer des questions ciblant chaque niveau de la taxonomie de Bloom : une manière d'assurer que votre évaluation couvre bien toute la gamme cognitive.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée 6 questions d'évaluation en <span class="placeholder">[matière]</span> sur <span class="placeholder">[thème]</span> pour des élèves de <span class="placeholder">[niveau]</span>, une pour chaque niveau de la taxonomie de Bloom :
+
+1. 🧠 CONNAISSANCE : question de restitution
+2. 📖 COMPRÉHENSION : question d'explication
+3. ⚙️ APPLICATION : exercice pratique
+4. 🔬 ANALYSE : question de comparaison ou décomposition
+5. 🧪 SYNTHÈSE : question de création ou proposition
+6. ⚖️ ÉVALUATION : question de jugement argumenté
+
+Pour chaque question, indique :
+- Le niveau de Bloom ciblé
+- Le barème suggéré
+- Les éléments de réponse attendus</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Astuce puissante : demandez « Quel pourcentage de mes évaluations habituelles cible les niveaux supérieurs (analyse, synthèse, évaluation) ? »</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 13 -->
+      <div class="exercise-card" data-ex="13">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 13</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer un barème détaillé et transparent</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              L'IA peut transformer n'importe quelle question ouverte en un barème détaillé avec points partiels, ce qui garantit une correction équitable et rapide.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Voici une question d'examen que je pose à mes élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> :
+
+« <span class="placeholder">[colle ici ta question d'examen]</span> »
+
+Crée un barème de correction détaillé sur <span class="placeholder">[nombre]</span> points qui :
+- Décompose la réponse en étapes ou éléments évaluables
+- Attribue des points à chaque étape
+- Prévoit des points partiels pour les réponses incomplètes
+- Inclut les erreurs fréquentes et les points à retirer
+- Précise ce qui fait la différence entre une bonne et une excellente réponse
+
+Format : tableau avec colonnes (Élément | Points | Détail).</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Un bon barème détaillé vous fait gagner un temps considérable lors de la correction ET réduit les contestations !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ CATÉGORIE 4 : OUTILS + ═══ -->
+  <!-- ════════════════════════════════════════ -->
+  <section class="category-section cat-plus reveal" data-category="plus">
+    <div class="category-header">
+      <div class="category-icon">⚡</div>
+      <div class="category-info">
+        <h2>Outils Complémentaires</h2>
+        <p>Différenciation, remédiation et gain de temps</p>
+      </div>
+      <span class="category-count">2 exercices</span>
+    </div>
+    <div class="exercises-grid">
+
+      <!-- EX 14 -->
+      <div class="exercise-card" data-ex="14">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 14</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Différencier un exercice en 3 niveaux</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              La différenciation est souvent chronophage. Ici, l'IA transforme un exercice unique en 3 versions adaptées aux différents niveaux de votre classe.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Voici un exercice que je donne à mes élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span> :
+
+« <span class="placeholder">[décris brièvement un exercice de ton cours OU invente un exercice simple]</span> »
+
+Transforme cet exercice en 3 versions différenciées :
+
+🟢 VERSION GUIDÉE (élèves en difficulté) :
+- Ajoute des étapes intermédiaires
+- Fournis des indices ou amorces de réponse
+- Simplifie le vocabulaire si nécessaire
+
+🟡 VERSION STANDARD (niveau attendu) :
+- L'exercice tel quel, bien formulé
+
+🔴 VERSION EXPERTE (élèves avancés) :
+- Ajoute une question d'approfondissement
+- Enlève certains indices
+- Demande une justification ou réflexion supplémentaire
+
+Garde le même thème et les mêmes objectifs pour les 3 versions.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>L'IA transforme 10 minutes de travail de différenciation manuelle en 30 secondes. C'est LE gain de temps le plus immédiat !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 15 -->
+      <div class="exercise-card" data-ex="15">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 15</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Créer une évaluation par les pairs</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 5 min</span>
+              <span class="tag">⭐⭐ Intermédiaire</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              L'évaluation par les pairs développe l'esprit critique. L'IA peut créer la fiche de guidage qui permet aux élèves de s'évaluer mutuellement de manière constructive.
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Crée une fiche d'évaluation par les pairs pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span>.
+
+Les élèves vont évaluer <span class="placeholder">[type de travail : une présentation orale / un travail écrit / un exposé]</span> de leur camarade.
+
+La fiche doit contenir :
+- Un titre et des consignes claires pour l'évaluateur
+- 5 critères formulés simplement (compréhensibles par un ado)
+- Pour chaque critère : une échelle de 1 à 4 avec des smileys
+- Un espace « Un point fort : _____ »
+- Un espace « Un conseil pour s'améliorer : _____ »
+- Un rappel de bienveillance en haut de la fiche
+
+Ton : adapté à des adolescents. Format : prêt à imprimer sur une page A4.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>L'évaluation par les pairs est doublement formative : celui qui évalue apprend autant que celui qui est évalué !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ CATÉGORIE 5 : MÉTA-COMPÉTENCES ═══ -->
+  <!-- ════════════════════════════════════════ -->
+  <section class="category-section cat-meta reveal" data-category="meta">
+    <div class="category-header">
+      <div class="category-icon">🧠</div>
+      <div class="category-info">
+        <h2>Méta-compétences IA</h2>
+        <p>Apprendre à mieux interagir avec l'IA et aller plus loin</p>
+      </div>
+      <span class="category-count">2 exercices</span>
+    </div>
+    <div class="exercises-grid">
+
+      <!-- EX 16 -->
+      <div class="exercise-card" data-ex="16">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 16</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">L'art de l'itération : améliorer un résultat</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐⭐ Avancé</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              La vraie puissance de l'IA réside dans l'itération. Cet exercice vous apprend à affiner un résultat en 3 étapes successives, comme un sculpteur qui affine son œuvre.
+            </div>
+            <div class="prompt-label">⌨ Étape 1 — Prompt initial</div>
+            <div class="prompt-box">Crée un exercice de <span class="placeholder">[type]</span> sur <span class="placeholder">[thème]</span> pour des élèves de <span class="placeholder">[niveau]</span> en <span class="placeholder">[matière]</span>.</div>
+            <div class="prompt-label">⌨ Étape 2 — Affiner (après la 1ère réponse)</div>
+            <div class="prompt-box">C'est un bon début. Maintenant :
+- Rends les questions 2 et 4 plus difficiles
+- Ajoute un contexte plus concret et motivant
+- Reformule la consigne pour qu'elle soit plus claire pour un ado</div>
+            <div class="prompt-label">⌨ Étape 3 — Finaliser</div>
+            <div class="prompt-box">Parfait. Pour finaliser :
+- Ajoute un barème détaillé sur 20 points
+- Crée un corrigé type
+- Mets en forme le tout de manière professionnelle, prêt à imprimer</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this, true)">📋 Copier l'étape 1</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>Retenez cette règle : la première réponse de l'IA est rarement la meilleure. C'est un point de départ ! Itérez 2-3 fois pour un résultat vraiment exploitable.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EX 17 -->
+      <div class="exercise-card" data-ex="17">
+        <div class="exercise-header" onclick="toggleExercise(this)">
+          <span class="exercise-number">EX 17</span>
+          <div class="exercise-title-area">
+            <div class="exercise-title">Demander à l'IA de critiquer votre évaluation</div>
+            <div class="exercise-meta">
+              <span class="tag">⏱ 7 min</span>
+              <span class="tag">⭐⭐⭐ Avancé</span>
+            </div>
+          </div>
+          <div class="exercise-toggle">▼</div>
+        </div>
+        <div class="exercise-body">
+          <div class="exercise-content">
+            <div class="exercise-description">
+              Utilisez l'IA comme un « collègue critique bienveillant » qui analyse votre évaluation existante et suggère des améliorations. Un regard neuf et constructif !
+            </div>
+            <div class="prompt-label">⌨ Prompt à copier dans Gemini</div>
+            <div class="prompt-box">Tu es un expert en docimologie (science de l'évaluation) et un collègue bienveillant. Je vais te soumettre une évaluation que j'ai créée. Analyse-la de manière constructive.
+
+Mon évaluation :
+Matière : <span class="placeholder">[matière]</span>
+Niveau : <span class="placeholder">[niveau]</span>
+Type : <span class="placeholder">[diagnostique / formative / certificative]</span>
+
+Voici les questions :
+<span class="placeholder">[colle ici 3-4 questions de ton évaluation]</span>
+
+Analyse cette évaluation selon ces critères :
+1. Les consignes sont-elles claires et sans ambiguïté ?
+2. Les niveaux de Bloom sont-ils variés ?
+3. La difficulté est-elle progressive ?
+4. Le barème est-il équitable ?
+5. Y a-t-il des biais ou formulations à améliorer ?
+
+Pour chaque point, propose une suggestion concrète d'amélioration.</div>
+            <div class="prompt-actions">
+              <button class="btn btn-copy" onclick="copyPrompt(this)">📋 Copier</button>
+              <a href="https://gemini.google.com/" target="_blank" class="btn btn-gemini">✨ Ouvrir Gemini</a>
+              <button class="btn btn-done" onclick="markDone(this)">✅ Fait !</button>
+            </div>
+            <div class="exercise-tip">
+              <span class="tip-emoji">💡</span>
+              <span>C'est peut-être l'exercice le plus transformateur : l'IA comme miroir critique de vos propres pratiques. Essayez avec une vraie évaluation que vous utilisez déjà !</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ COMPLETION BANNER ═══ -->
+  <div class="completion-banner" id="completionBanner">
+    <h2>🎉 Félicitations !</h2>
+    <p>Vous avez complété tous les exercices du AI Assessment Lab. Vous êtes prêt(e) à transformer votre pratique évaluative avec l'IA !</p>
+  </div>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer-logo">AI Assessment Lab</div>
+    <p>Formation IA & Évaluation — Institut Saint-Luc de Frameries</p>
+    <div class="hearts">Conçu avec 💜 pour les enseignants innovants</div>
+  </footer>
+
+</div>
+
+<!-- ═══ SCROLL TOP ═══ -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0})">↑</button>
+
+<!-- ═══ CONFETTI CONTAINER ═══ -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ═══ STATE ═══
+const totalExercises = 17;
+let completedExercises = new Set();
+
+// Load saved state
+try {
+  const saved = localStorage.getItem('ailab-completed');
+  if (saved) {
+    completedExercises = new Set(JSON.parse(saved));
+    completedExercises.forEach(ex => {
+      const card = document.querySelector(`[data-ex="${ex}"]`);
+      if (card) card.classList.add('completed');
+    });
+    updateProgress();
+  }
+} catch(e) {}
+
+// ═══ PARTICLES ═══
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    p.style.animationDuration = (6 + Math.random() * 6) + 's';
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// ═══ SCROLL REVEAL ═══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ═══ PROGRESS BAR VISIBILITY ═══
+const heroObserver = new IntersectionObserver((entries) => {
+  const ps = document.getElementById('progressSection');
+  if (!entries[0].isIntersecting) {
+    ps.style.opacity = '1';
+    ps.style.pointerEvents = 'auto';
+  } else {
+    ps.style.opacity = '0';
+    ps.style.pointerEvents = 'none';
+  }
+}, { threshold: 0.3 });
+heroObserver.observe(document.getElementById('hero'));
+
+// ═══ SCROLL TOP BUTTON ═══
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTop');
+  if (window.scrollY > 600) btn.classList.add('show');
+  else btn.classList.remove('show');
+});
+
+// ═══ TOGGLE EXERCISE ═══
+function toggleExercise(header) {
+  const card = header.closest('.exercise-card');
+  card.classList.toggle('open');
+}
+
+// ═══ COPY PROMPT ═══
+function copyPrompt(btn, firstOnly = false) {
+  const content = btn.closest('.exercise-content');
+  let boxes;
+  if (firstOnly) {
+    boxes = [content.querySelectorAll('.prompt-box')[0]];
+  } else {
+    boxes = content.querySelectorAll('.prompt-box');
+  }
+  
+  let text = '';
+  boxes.forEach((box, i) => {
+    if (i > 0) text += '\n\n---\n\n';
+    text += box.innerText;
+  });
+  
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copié !';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = orig;
+    }, 2000);
+  });
+}
+
+// ═══ MARK DONE ═══
+function markDone(btn) {
+  const card = btn.closest('.exercise-card');
+  const ex = card.dataset.ex;
+  
+  if (completedExercises.has(ex)) {
+    completedExercises.delete(ex);
+    card.classList.remove('completed');
+  } else {
+    completedExercises.add(ex);
+    card.classList.add('completed');
+    
+    // Mini confetti
+    launchConfetti(btn);
+  }
+  
+  updateProgress();
+  
+  // Save
+  try {
+    localStorage.setItem('ailab-completed', JSON.stringify([...completedExercises]));
+  } catch(e) {}
+}
+
+// ═══ UPDATE PROGRESS ═══
+function updateProgress() {
+  const count = completedExercises.size;
+  const pct = (count / totalExercises) * 100;
+  
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressCount').textContent = count;
+  document.getElementById('xpDisplay').textContent = count * 50;
+  
+  // Completion banner
+  if (count >= totalExercises) {
+    document.getElementById('completionBanner').classList.add('show');
+    launchBigConfetti();
+  } else {
+    document.getElementById('completionBanner').classList.remove('show');
+  }
+}
+
+// ═══ CONFETTI ═══
+function launchConfetti(origin) {
+  const container = document.getElementById('confettiContainer');
+  const rect = origin.getBoundingClientRect();
+  const colors = ['#00e5ff', '#ff2d7b', '#ffb300', '#b388ff', '#00e676'];
+  
+  for (let i = 0; i < 15; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*60) + 'px';
+    piece.style.top = rect.top + 'px';
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.width = (4 + Math.random()*6) + 'px';
+    piece.style.height = (4 + Math.random()*6) + 'px';
+    piece.style.animationDuration = (1.5 + Math.random()*1.5) + 's';
+    piece.style.animationDelay = Math.random()*0.3 + 's';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 3500);
+  }
+}
+
+function launchBigConfetti() {
+  const container = document.getElementById('confettiContainer');
+  const colors = ['#00e5ff', '#ff2d7b', '#ffb300', '#b388ff', '#00e676'];
+  
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random()*100 + '%';
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.width = (5 + Math.random()*8) + 'px';
+    piece.style.height = (5 + Math.random()*8) + 'px';
+    piece.style.animationDuration = (2 + Math.random()*2) + 's';
+    piece.style.animationDelay = Math.random()*1 + 's';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 5000);
+  }
+}
+
+// ═══ FILTER ═══
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('.category-section').forEach(section => {
+      if (filter === 'all' || section.dataset.category === filter) {
+        section.style.display = '';
+        setTimeout(() => section.classList.add('visible'), 50);
+      } else {
+        section.style.display = 'none';
+      }
+    });
+  });
+});
+</script>
 </body>
 </html>
